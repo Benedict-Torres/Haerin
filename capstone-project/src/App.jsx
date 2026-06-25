@@ -14,11 +14,11 @@ return(
 <header>
 
 <h1>
-HAERIN
+SECURE PASS
 </h1>
 
 <p>
-Secure Password Analysis Platform
+A Password Generator and Strength Checker with an Interactive Module for Password Security Practices
 </p>
 
 </header>

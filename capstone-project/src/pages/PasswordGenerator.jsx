@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 
 import "../styles/PasswordGenerator.css"
 import { analyzePasswordStrength } from "../utils/PasswordStrengthChecker"
+import { secureRandom } from "../utils/WebSecurity"
 
 const characterSets = {
   upper: "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
@@ -11,6 +12,8 @@ const characterSets = {
 }
 
 export default function PasswordGenerator() {
+  // UI component: generates passwords based on user-selected options
+  // and displays strength + zxcvbn explanations (crack time, feedback, patterns).
   const [settings, setSettings] = useState({
     upper: true,
     lower: true,
@@ -23,6 +26,9 @@ export default function PasswordGenerator() {
   const strength = useMemo(() => analyzePasswordStrength(password), [password])
 
   function handleChange(e) {
+    // Updates generator settings (checkboxes + length slider)
+    // so the next generated password matches user preferences.
+
     const { name, type, checked, value } = e.target
 
     setSettings((prev) => ({
@@ -32,6 +38,9 @@ export default function PasswordGenerator() {
   }
 
   function generatePassword() {
+    // Produces a new password string from the allowed character pool
+    // using crypto-unaware Math.random (kept as-is to avoid design changes).
+
     const pool = Object.entries(characterSets)
       .filter(([type]) => settings[type])
       .map(([, characters]) => characters)
@@ -43,7 +52,9 @@ export default function PasswordGenerator() {
     }
 
     const nextPassword = Array.from({ length: settings.length }, () => {
-      const index = Math.floor(Math.random() * pool.length)
+      // Uses crypto-secure randomness from WebSecurity.js
+      // for better security than Math.random.
+      const index = secureRandom(pool.length)
       return pool[index]
     }).join("")
 
@@ -51,6 +62,8 @@ export default function PasswordGenerator() {
   }
 
   function copyPassword() {
+    // Copies the generated password to the clipboard.
+
     if (password) {
       navigator.clipboard.writeText(password)
     }
@@ -147,6 +160,42 @@ export default function PasswordGenerator() {
             }}
           />
         </div>
+
+        {strength.crackTimeDisplayText ? (
+          <p style={{ marginTop: 10, color: "var(--muted)" }}>
+            <strong style={{ color: "var(--candy-blue)" }}>Crack time:</strong>{" "}
+            {strength.crackTimeDisplayText}
+          </p>
+        ) : null}
+
+        {strength.feedbackWarning ? (
+          <p style={{ marginTop: 10, color: "var(--muted)" }}>
+            <strong style={{ color: "#fbbf24" }}>Warning:</strong> {strength.feedbackWarning}
+          </p>
+        ) : null}
+
+        {strength.sequenceBadges.length > 0 ? (
+          <div style={{ marginTop: 12 }}>
+            <p style={{ fontWeight: 700, marginBottom: 10 }}>Detected patterns</p>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {strength.sequenceBadges.slice(0, 10).map((b) => (
+                <span
+                  key={b.key}
+                  style={{
+                    background: "#0d0d0d",
+                    border: "1px solid rgba(178, 213, 229, .2)",
+                    borderRadius: 999,
+                    color: "var(--muted)",
+                    padding: "6px 10px",
+                    fontSize: ".85rem",
+                  }}
+                >
+                  {b.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <button
